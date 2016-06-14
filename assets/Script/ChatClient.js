@@ -94,8 +94,13 @@ cc.Class({
     
     	//handle disconect message, occours when the client is disconnect with servers
     	pomelo.on('disconnect', function(reason) {
-    	    cc.log("pomelo.on() disconnect");
+    	    cc.log("pomelo.on() disconnect: ", reason);
     		that.showLogin();
+    	});
+    	
+    	pomelo.on('io-error', function(data) {
+    	    cc.log("pomelo.on() io-error: ", data);
+            that.showError("连接失败，请检查服务器是否已经启动成功！");
     	});
 
         this.serverIp = "127.0.0.1";
@@ -242,6 +247,7 @@ cc.Class({
         			username: username,
         			rid: rid
         		}, function(data) {
+        		    cc.log("pomelo.request return data: ", data);
         			if(data.error) {
         				that.showError(DUPLICATE_ERROR);
         				return;
@@ -272,6 +278,8 @@ cc.Class({
     		pomelo.request(route, {
     			uid: uid
     		}, function(data) {
+    		    cc.log("pomelo.request return data: ", data);
+    		    
     			pomelo.disconnect();
     			if(data.code === 500) {
     				that.showError(LOGIN_ERROR);
@@ -291,9 +299,12 @@ cc.Class({
         
         this.errorLabel.string = content;
         
-        this.scheduleOnce(function() {
-            this.errorLabel.string = "";
-        }, 3);
+        this.unschedule(this.clearErrorMsg);
+        this.scheduleOnce(this.clearErrorMsg, 3);
+    },
+    
+    clearErrorMsg: function() {
+        this.errorLabel.string = "";
     },
     
     // show tip
